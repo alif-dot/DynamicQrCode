@@ -1,0 +1,53 @@
+﻿@using System.IO;
+@using QRCoder;
+@model List<SellMasters>
+
+<h2>Invoices</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Invoice No</th>
+            <th>Order Number</th>
+            <th>Party Address</th>
+            <th>Car</th>
+            <th>Total With VAT</th>
+            <th>QR Code</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var invoice in Model)
+        {
+            <tr>
+                <td>@invoice.InvoiceNo</td>
+                <td>@invoice.OrderNumber</td>
+                <td>@invoice.PartyAddress</td>
+                <td>@invoice.Car</td>
+                <td>@invoice.TotalWithVat</td>
+                <td>
+                    <img src="data:image/png;base64,@Convert.ToBase64String(GenerateQrCode(invoice))" alt="QR Code" height="50" width="50" />
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@functions {
+    byte[] GenerateQrCode(SellMasters invoice)
+    {
+        var qrCodeText = $"{invoice.OrderNumber}, {invoice.PartyAddress}, {invoice.Car}, {invoice.TotalWithVat}";
+        QRCodeGenerator qrGenerator = new QRCodeGenerator();
+        QRCodeData qrCodeData = qrGenerator.CreateQrCode(qrCodeText, QRCodeGenerator.ECCLevel.Q);
+        QRCode qrCode = new QRCode(qrCodeData);
+        return ImageToByteArray(qrCode.GetGraphic(20));
+    }
+
+    byte[] ImageToByteArray(System.Drawing.Image image)
+    {
+        using (MemoryStream stream = new MemoryStream())
+        {
+            image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+            return stream.ToArray();
+        }
+    }
+}
